@@ -4,12 +4,12 @@ An AI-powered gift suggestion app that helps users find thoughtful and practical
 
 ## Features
 
-- 🤖 AI-powered gift suggestions using OpenAI API
-- 📝 Markdown rendering for rich text formatting
-- 🛡️ XSS protection with DOMPurify sanitization
-- ⚡ Fast bundling with Vite
-- 🎨 Responsive UI with auto-resizing textarea
-- 🔒 Environment-based configuration
+-  AI-powered gift suggestions using OpenAI API
+-  Markdown rendering for rich text formatting
+-  XSS protection with DOMPurify sanitization
+-  Fast bundling with Vite
+-  Responsive UI with auto-resizing textarea
+-  Environment-based configuration
 
 ## Tech Stack
 
