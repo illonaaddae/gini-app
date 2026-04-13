@@ -35,11 +35,7 @@
 body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
-  font-family:
-    "Inter",
-    -apple-system,
-    system-ui,
-    sans-serif;
+  font-family: "Inter", -apple-system, system-ui, sans-serif;
   line-height: 1.6;
   overflow-x: hidden;
 }
