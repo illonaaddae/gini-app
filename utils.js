@@ -67,3 +67,12 @@ export function checkEnvironment() {
   console.log("AI provider URL:", aiUrl);
   console.log("AI model:", aiModel);
 }
+
+/**
+ * Show the output container immediately (for streaming feedback)
+ */
+export function showStream() {
+  const outputContainer = document.getElementById("output-container");
+  outputContainer.classList.remove("hidden");
+  outputContainer.classList.add("visible");
+}

@@ -4,12 +4,13 @@ An AI-powered gift suggestion app that helps users find thoughtful and practical
 
 ## Features
 
--  AI-powered gift suggestions using OpenAI API
--  Markdown rendering for rich text formatting
--  XSS protection with DOMPurify sanitization
--  Fast bundling with Vite
--  Responsive UI with auto-resizing textarea
--  Environment-based configuration
+- 🤖 AI-powered gift suggestions using OpenAI API
+- 🌊 Streaming responses for real-time output updates
+- 📝 Markdown rendering for rich text formatting
+- 🛡️ XSS protection with DOMPurify sanitization
+- ⚡ Fast bundling with Vite
+- 🎨 Responsive UI with auto-resizing textarea
+- 🔒 Environment-based configuration
 
 ## Tech Stack
 
@@ -24,17 +25,20 @@ An AI-powered gift suggestion app that helps users find thoughtful and practical
 ## Installation
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/illonaaddae/gini-app.git
 cd gini-app
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
 3. Create a `.env` file in the root directory:
+
 ```
 AI_KEY=your_openai_api_key
 AI_URL=https://api.openai.com/v1
@@ -46,6 +50,7 @@ AI_MODEL=gpt-4
 ## Development
 
 Start the development server:
+
 ```bash
 npm start
 ```
@@ -55,6 +60,7 @@ The app will be available at `http://localhost:5173`
 ## Building
 
 Build for production:
+
 ```bash
 npm run build
 ```
@@ -79,9 +85,10 @@ Output files will be in the `dist/` directory.
 
 1. User enters gift preferences in the input field
 2. The app sends the request to OpenAI API with a system prompt for gift suggestions
-3. OpenAI returns gift recommendations
-4. The response is parsed as Markdown and sanitized for security
-5. HTML is rendered safely in the output area
+3. OpenAI streams gift recommendations chunk-by-chunk
+4. Each chunk is appended and rendered from Markdown to HTML
+5. HTML is sanitized for security using DOMPurify
+6. The sanitized HTML is rendered safely in the output area
 
 ## Security
 

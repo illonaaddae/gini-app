@@ -1,7 +1,12 @@
 import OpenAI from "openai";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
-import { autoResizeTextarea, checkEnvironment, setLoading } from "./utils.js";
+import {
+  autoResizeTextarea,
+  checkEnvironment,
+  setLoading,
+  showStream,
+} from "./utils.js";
 checkEnvironment();
 
 // Initialize an OpenAI client for your provider using env vars
@@ -28,7 +33,8 @@ const messages = [
     role: "system",
     content: `You are the Gift Genie!
     Make your gift suggestions thoughtful and practical.
-    Your response must be under 100 words. 
+    The user will describe the gift's recipient. 
+    Your response must be 800 words. 
     Skip intros and conclusions. 
     Only output gift suggestions.`,
   },
@@ -50,27 +56,39 @@ async function handleGiftRequest(e) {
     content: userPrompt,
   });
 
-  
   try {
     const response = await openai.chat.completions.create({
       model: process.env.AI_MODEL,
       messages,
+      stream: true,
     });
 
-    // Extract the model's generated text from the response
-    const assistantResponse = response.choices[0].message.content;
-    const responseHTML = marked.parse(assistantResponse);
-    const safeHTML = DOMPurify.sanitize(responseHTML)
+    let assistantResponse = "";
 
-    outputContent.innerHTML = safeHTML;
+    // Show output container immediately for streaming feedback
+    showStream();
+
+    for await (const chunk of response) {
+      const chunkContent = chunk.choices[0]?.delta?.content ?? "";
+      assistantResponse += chunkContent;
+
+      // Convert Markdown to HTML
+      const responseHTML = marked.parse(assistantResponse);
+
+      // Sanitize the HTML
+      const safeHTML = DOMPurify.sanitize(responseHTML);
+
+      outputContent.innerHTML = safeHTML;
+    }
+
+    
   } catch (error) {
-    console.log(error);
+  
     outputContent.textContent = `Ooops Genie encounted ${error} while processing your request.`;
   } finally {
     // Clear loading state
     setLoading(false);
   }
-  
 }
 
 start();
