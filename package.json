@@ -4,7 +4,8 @@
   "description": "1.3 Importing & Creating The OpenAI Client",
   "main": "index.js",
   "scripts": {
-    "start": "vite"
+    "start": "vite",
+    "build": "vite build"
   },
   "dependencies": {
     "dompurify": "^3.3.3",
