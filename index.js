@@ -31,35 +31,31 @@ function start() {
 const messages = [
   {
     role: "system",
-    content: `You are the Gift Genie!
-    Make your gift suggestions thoughtful and practical.
-    The user will describe the gift's recipient. 
-    Your response must be in structured Markdown. 
-    Skip intros and conclusions. 
-    Only output gift suggestions.`,
-  },
-];
+    content: `You are the Gift Genie.
+
+Your job is to suggest thoughtful, practical, and useful gift ideas based on the user's request. You are context-aware and adapt your suggestions based on location, budget, time constraints, and other contextual clues.
+
+Rules:
+  * If they mention a location (city, country, region), suggest gifts available or popular there.
+  * If they mention a budget constraint, ensure all suggestions fit within it.
+  * If they mention a time constraint (urgent, last-minute, future date), adapt accordingly.
+  * If they mention an event or occasion, tailor suggestions to that context.
+  * Where to find it (online, local stores, specialty shops).
+  * Estimated cost range if not already mentioned.
+  * Timeline to acquire it (same-day, next-day, pre-order).
+  * Any preparation or customization steps if needed.
 
 async function handleGiftRequest(e) {
-  // Prevent default form submission
-  e.preventDefault();
 
   // Get user input, trim whitespace, exit if empty
-  const userPrompt = userInput.value.trim();
-  if (!userPrompt) return;
-
   // Set loading state to start the animation
   setLoading(true);
 
   messages.push({
-    role: "user",
     content: userPrompt,
   });
 
   try {
-    const response = await openai.chat.completions.create({
-      model: process.env.AI_MODEL,
-      messages,
       stream: true,
     });
 
@@ -75,15 +71,32 @@ async function handleGiftRequest(e) {
       // Convert Markdown to HTML
       const responseHTML = marked.parse(assistantResponse);
 
-      // Sanitize the HTML
-      const safeHTML = DOMPurify.sanitize(responseHTML);
+      // Sanitize the HTML (allow heading tags)
+      const safeHTML = DOMPurify.sanitize(responseHTML, {
+        ALLOWED_TAGS: [
+          "h1",
+          "h2",
+          "h3",
+          "h4",
+          "h5",
+          "h6",
+          "p",
+          "br",
+          "strong",
+          "em",
+          "u",
+          "ul",
+          "ol",
+          "li",
+          "a",
+        ],
+        ALLOWED_ATTR: ["href", "title"],
+      });
+
 
       outputContent.innerHTML = safeHTML;
     }
-
-    
   } catch (error) {
-  
     outputContent.textContent = `Ooops Genie encounted ${error} while processing your request.`;
   } finally {
     // Clear loading state
