@@ -35,7 +35,11 @@
 body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
-  font-family: "Inter", -apple-system, system-ui, sans-serif;
+  font-family:
+    "Inter",
+    -apple-system,
+    system-ui,
+    sans-serif;
   line-height: 1.6;
   overflow-x: hidden;
 }
@@ -252,12 +256,16 @@ textarea::placeholder {
   color: var(--accent-glow);
 }
 
+#output-content h1,
+#output-content h2,
 #output-content h3,
-#output-content h4 {
+#output-content h4,
+#output-content h5,
+#output-content h6 {
+  color: var(--accent-primary) !important;
   margin-top: 0.5em;
   margin-bottom: 0.2em;
   font-weight: 700;
-  color: var(--accent-primary);
 }
 
 /* 
