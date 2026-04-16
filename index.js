@@ -34,21 +34,43 @@ async function handleGiftRequest(e) {
       body: JSON.stringify({ userPrompt }),
     });
 
-    const text = await response.text();
-    console.log("Response:", response.status, text.slice(0, 300));
-
     if (!response.ok) {
-      throw new Error(`Server error ${response.status}: ${text.slice(0, 200)}`);
+      const errText = await response.text();
+      throw new Error(`Server error ${response.status}: ${errText.slice(0, 200)}`);
     }
 
-    const { message } = JSON.parse(text);
-    if (!message) throw new Error("The Genie returned an empty response. Try again.");
-    const html = marked.parse(message);
-    outputContent.innerHTML = DOMPurify.sanitize(html, {
-      ALLOWED_TAGS: ["p","h1","h2","h3","h4","h5","h6","ul","ol","li","pre","code","blockquote","a","strong","em"],
-      ALLOWED_ATTR: ["href", "target", "rel"],
-      ALLOWED_PROTOCOLS: ["http:", "https:", "mailto:"],
-    });
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let assistantResponse = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const parts = buffer.split("\n\n");
+      buffer = parts.pop() ?? "";
+
+      for (const part of parts) {
+        const line = part.trim();
+        if (!line.startsWith("data:")) continue;
+        const payload = line.slice(5).trim();
+        if (payload === "[DONE]") break;
+
+        try {
+          const { content } = JSON.parse(payload);
+          assistantResponse += content;
+          outputContent.innerHTML = DOMPurify.sanitize(marked.parse(assistantResponse), {
+            ALLOWED_TAGS: ["p","h1","h2","h3","h4","h5","h6","ul","ol","li","pre","code","blockquote","a","strong","em"],
+            ALLOWED_ATTR: ["href", "target", "rel"],
+            ALLOWED_PROTOCOLS: ["http:", "https:", "mailto:"],
+          });
+        } catch {
+          // skip malformed SSE chunks
+        }
+      }
+    }
   } catch (error) {
     console.error(error);
     outputContent.textContent =

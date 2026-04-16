@@ -24,13 +24,13 @@ constrained context.
 After the gift ideas, include a section titled "Questions for you"
 with clarifying questions that would help improve the recommendations.`;
 
-export const handler = async (event) => {
-  if (event.httpMethod !== "POST") {
-    return { statusCode: 405, body: "Method not allowed" };
+export default async (req) => {
+  if (req.method !== "POST") {
+    return new Response("Method not allowed", { status: 405 });
   }
 
   try {
-    const { userPrompt } = JSON.parse(event.body);
+    const { userPrompt } = await req.json();
 
     const completion = await openai.chat.completions.create({
       model: process.env.AI_MODEL,
@@ -38,20 +38,45 @@ export const handler = async (event) => {
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
       ],
+      stream: true,
     });
 
-    console.log("Completion:", JSON.stringify(completion.choices[0]));
-    const message = completion.choices[0].message.content ?? "";
-    return {
-      statusCode: 200,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message }),
-    };
+    const encoder = new TextEncoder();
+
+    const readable = new ReadableStream({
+      async start(controller) {
+        try {
+          for await (const chunk of completion) {
+            const content = chunk.choices[0]?.delta?.content ?? "";
+            if (content) {
+              controller.enqueue(
+                encoder.encode(`data: ${JSON.stringify({ content })}\n\n`)
+              );
+            }
+          }
+          controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+        } finally {
+          controller.close();
+        }
+      },
+    });
+
+    return new Response(readable, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        "X-Accel-Buffering": "no",
+      },
+    });
   } catch (error) {
     console.error("OpenAI error:", error);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: error.message }),
-    };
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
+};
+
+export const config = {
+  path: "/api/gift",
 };
