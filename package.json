@@ -10,6 +10,7 @@
     "server": "node --env-file=.env server.js"
   },
   "dependencies": {
+    "@netlify/functions": "^5.2.0",
     "dompurify": "^3.3.3",
     "express": "^5.2.1",
     "highlight.js": "^11.11.1",
