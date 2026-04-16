@@ -31,21 +31,29 @@ export const handler = stream(async (event) => {
   }
 
   const { userPrompt } = JSON.parse(event.body);
-
-  const completion = await openai.chat.completions.create({
-    model: process.env.AI_MODEL,
-    messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userPrompt },
-    ],
-    stream: true,
-  });
-
   const encoder = new TextEncoder();
 
   const readable = new ReadableStream({
     async start(controller) {
+      // Send a heartbeat every 5s so the CDN never sees an idle connection
+      const heartbeat = setInterval(() => {
+        try {
+          controller.enqueue(encoder.encode(": ping\n\n"));
+        } catch {
+          clearInterval(heartbeat);
+        }
+      }, 5000);
+
       try {
+        const completion = await openai.chat.completions.create({
+          model: process.env.AI_MODEL,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt },
+          ],
+          stream: true,
+        });
+
         for await (const chunk of completion) {
           const content = chunk.choices[0]?.delta?.content ?? "";
           if (content) {
@@ -54,8 +62,15 @@ export const handler = stream(async (event) => {
             );
           }
         }
+
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+      } catch (error) {
+        console.error("OpenAI error:", error);
+        controller.enqueue(
+          encoder.encode(`data: ${JSON.stringify({ error: error.message })}\n\n`)
+        );
       } finally {
+        clearInterval(heartbeat);
         controller.close();
       }
     },
