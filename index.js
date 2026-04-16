@@ -15,6 +15,7 @@ function start() {
 
 async function handleGiftRequest(e) {
   e.preventDefault();
+  console.log("Form submitted");
 
   const userPrompt = userInput.value.trim();
   if (!userPrompt) return;
@@ -24,6 +25,7 @@ async function handleGiftRequest(e) {
   outputContent.innerHTML = '<span class="status-msg">Thinking<span class="dots"><span>.</span><span>.</span><span>.</span></span></span>';
 
   try {
+    console.log("Fetching /api/gift...");
     const response = await fetch("/api/gift", {
       method: "POST",
       headers: {
@@ -33,6 +35,7 @@ async function handleGiftRequest(e) {
     });
 
     const text = await response.text();
+    console.log("Response:", response.status, text.slice(0, 300));
 
     if (!response.ok) {
       throw new Error(`Server error ${response.status}: ${text.slice(0, 200)}`);
