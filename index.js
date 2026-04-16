@@ -32,11 +32,14 @@ async function handleGiftRequest(e) {
       body: JSON.stringify({ userPrompt }),
     });
 
-    const data = await response.json();
+    const text = await response.text();
+    console.log("Server response:", response.status, text);
 
     if (!response.ok) {
-      throw new Error(data.error || `Server error ${response.status}`);
+      throw new Error(`Server error ${response.status}: ${text.slice(0, 200)}`);
     }
+
+    const data = JSON.parse(text);
 
     const html = marked.parse(data.message);
     const sanitizedHtml = DOMPurify.sanitize(html, {
