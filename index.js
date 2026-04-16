@@ -27,126 +27,33 @@ function start() {
   giftForm.addEventListener("submit", handleGiftRequest);
 }
 
-const messages = [
-  {
-    role: "system",
-    content: `Your job is to suggest thoughtful, practical, and useful gift ideas based on the user's request. You are context-aware and adapt your suggestions based on location, budget, time constraints, and other contextual clues.
+const systemPrompt = `Your job is to suggest thoughtful, practical, and useful gift ideas based on the user's request. You are context-aware and adapt your suggestions based on location, budget, time constraints, and other contextual clues.
+
+You have access to a web search tool. Use it proactively to ground your suggestions in real, current information:
+  * Search for current prices at major retailers before quoting a cost range — do not guess.
+  * If a location is mentioned, search for local stores, regional retailers, or location-specific delivery options.
+  * If an occasion or trend is mentioned (e.g. "Mother's Day 2025", "graduation gift for a gamer"), search for what is trending or popular right now.
+  * If a product or brand is mentioned, search for its current availability and whether it is in stock.
+  * Prefer linking to real product pages or store listings over generic descriptions.
 
 Rules:
-  * If they mention a location (city, country, region), suggest gifts available or popular there.
+  * Give 3 to 5 gift ideas unless the user asks for fewer or more.
   * If they mention a budget constraint, ensure all suggestions fit within it.
-  * If they mention a time constraint (urgent, last-minute, future date), adapt accordingly.
+  * If they mention a time constraint (urgent, last-minute, future date), adapt accordingly — search for same-day or expedited options if needed.
+  * If they mention an event or occasion, tailor suggestions to that context.
+  * Include where to find it (online, local stores, specialty shops) with real links when available.
+  * Include current, searched price ranges — not estimates.
+  * Include timeline to acquire it (same-day, next-day, pre-order) based on what you find.
+  * Include preparation or customization steps when useful.
+  * Keep the response concise and easy to scan.
+
   Markdown Formatting (CRITICAL):
   - Each gift starts with ## heading: ## Gift 1: [Name]
   - Under each gift, always include these ### subheadings in this order:
     * ### Why it works (brief explanation)
-    * ### How to Get It (where to find, cost, timeline, customization)
+    * ### How to Get It (where to find, current price, timeline, and a link if available)
   - End with ## Questions for you (with 2-4 bullet-point questions)
-  - Use ##/### for ALL section headings. Never use plain text or bold instead.
-
-  * If they mention an event or occasion, tailor suggestions to that context.
-    * Give 3 to 5 gift ideas unless the user asks for fewer or more.
-    * If they mention a location (city, country, region), suggest gifts available or popular there.
-    * If they mention a budget constraint, ensure all suggestions fit within it.
-    * If they mention a time constraint (urgent, last-minute, future date), adapt accordingly.
-    * If they mention an event or occasion, tailor suggestions to that context.
-    * Include where to find it (online, local stores, specialty shops).
-    * Include estimated cost range when possible.
-    * Include timeline to acquire it (same-day, next-day, pre-order).
-    * Include preparation or customization steps when useful.
-    * Keep the response concise and easy to scan.
-    * Ask 2 to 4 short follow-up questions in the final section.`,
-  },
-
-  {
-    role: "user",
-    content:
-      "dubai airport. last minute gifts for niece (arts & crafts) and nephew who loves football",
-  },
-  {
-    role: "assistant",
-    content: `
-### Travel Art Kit for Niece (Compact & Portable)
-
-A small, kid-friendly arts & crafts item that's easy to pack and perfect for a quick creative distraction during travel.
-
-**How to get it:**
-1. Head to Dubai International Airport (DXB) and proceed to Terminal 3 Departures.
-2. Visit Dubai Duty Free or a nearby WHSmith that carries kids’ stationery.
-3. Ask for compact arts & crafts kits or a coloring book with pencils.
-4. Choose a lightweight option suitable for carry-on.
-5. Request gift wrapping if available.
-
----
-
-### Mini Football Keychain for Nephew
-
-A light, inexpensive football-themed souvenir that’s easy to carry and perfect for an airport purchase.
-
-**How to get it:**
-1. Visit Dubai Duty Free or a souvenir shop near the gates.
-2. Ask for football-themed keychains or small sports souvenirs.
-3. Check toy or sports sections if needed.
-4. Purchase and pack securely.
-
----
-
-## Questions for you
-1. What are the ages of your niece and nephew?
-2. Do you have a budget per gift?
-3. Are you departing from Terminal 3?
-4. Does your nephew support a specific team?
-`,
-  },
-  {
-    role: "user",
-    content:
-      "need birthday gifts in london for my sister who loves coffee and journaling. budget is 25 to 40 pounds each. i need them by tomorrow",
-  },
-  {
-    role: "assistant",
-    content: `
-### Specialty Coffee Beans + Small Tasting Notebook
-
-A fresh bag of specialty beans paired with a compact notebook gives her a practical coffee ritual she can actually use right away.
-
-**How to get it:**
-1. Check nearby specialty coffee shops in London (for example, Monmouth, Origin, or local roasters).
-2. Ask for a 250g bag in your budget range and add a pocket notebook from a nearby stationery shop.
-3. Most central shops can be visited and purchased same-day.
-
----
-
-### Guided Journal + Fine Liner Pen Set
-
-A guided journal makes writing easier to stick with, and a smooth pen set makes it feel more enjoyable for daily use.
-
-**How to get it:**
-1. Visit Paperchase, Waterstones, or WHSmith for guided journals and pen sets.
-2. Choose one journal around 15 to 25 pounds and pens around 10 to 15 pounds.
-3. Use click-and-collect if a nearby branch has low stock for tomorrow pickup.
-
----
-
-### Reusable Coffee Cup + Cafe Gift Card
-
-This gives her both a useful everyday item and immediate value she can enjoy on her next coffee run.
-
-**How to get it:**
-1. Pick up a quality reusable cup from John Lewis, M&S, or a coffee chain branch.
-2. Add a gift card from her favorite cafe brand to stay within your 25 to 40 pounds target.
-3. Both items are typically available same-day across central London.
-
----
-
-## Questions for you
-1. Does she prefer filter coffee, espresso, or pods at home?
-2. Would you like gifts that feel more practical or more sentimental?
-3. Do you want all items bought in-store only, or is click-and-collect okay?
-4. Should I prioritize brands near a specific London area?
-`,
-  },
-];
+  - Use ##/### for ALL section headings. Never use plain text or bold instead.`;
 
 // Handle form submission
 async function handleGiftRequest(e) {
@@ -157,53 +64,67 @@ async function handleGiftRequest(e) {
 
   setLoading(true);
 
-  messages.push({
-    role: "user",
-    content: userPrompt,
-  });
-
   try {
-    const response = await openai.chat.completions.create({
+    const response = await openai.responses.create({
       model: process.env.AI_MODEL,
-      messages,
+      input: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
+
+      tools: [
+        {
+          type: "web_search_preview",
+        },
+      ],
+      max_output_tokens: 1500,
       stream: true,
     });
 
     let assistantResponse = "";
     showStream();
+    outputContent.innerHTML = '<span class="status-msg">Thinking<span class="dots"></span></span>';
 
     for await (const chunk of response) {
-      const chunkContent = chunk.choices[0]?.delta?.content ?? "";
-      assistantResponse += chunkContent;
+      if (chunk.type === "response.web_search_call.in_progress") {
+        outputContent.innerHTML = '<span class="status-msg">Searching the web<span class="dots"></span></span>';
+      }
 
-      const responseHTML = marked.parse(assistantResponse);
-      const safeHTML = DOMPurify.sanitize(responseHTML, {
-        ALLOWED_TAGS: [
-          "h1",
-          "h2",
-          "h3",
-          "h4",
-          "h5",
-          "h6",
-          "p",
-          "br",
-          "strong",
-          "em",
-          "u",
-          "ul",
-          "ol",
-          "li",
-          "a",
-        ],
-        ALLOWED_ATTR: ["href", "title"],
-      });
+      if (chunk.type === "response.output_text.delta") {
+        assistantResponse += chunk.delta;
 
-      outputContent.innerHTML = safeHTML;
+        const responseHTML = marked.parse(assistantResponse);
+        const safeHTML = DOMPurify.sanitize(responseHTML, {
+          ALLOWED_TAGS: [
+            "h1",
+            "h2",
+            "h3",
+            "h4",
+            "h5",
+            "h6",
+            "p",
+            "br",
+            "strong",
+            "em",
+            "u",
+            "ul",
+            "ol",
+            "li",
+            "a",
+          ],
+          ALLOWED_ATTR: ["href", "title"],
+        });
+
+        outputContent.innerHTML = safeHTML;
+      }
     }
 
-    messages.push({ role: "assistant", content: assistantResponse });
   } catch (error) {
-    outputContent.textContent = `Ooops Genie encountered ${error} while processing your request.`;
+    console.error("Genie error:", error);
+    const isRateLimit = error?.message?.includes("Rate limit");
+    outputContent.textContent = isRateLimit
+      ? "The Genie is overwhelmed — too many wishes at once! Wait a few seconds and try again."
+      : `Ooops Genie encountered ${error} while processing your request.`;
   } finally {
     setLoading(false);
   }

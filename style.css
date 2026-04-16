@@ -64,6 +64,7 @@ body {
 .app-header {
   text-align: center;
   animation: fadeInDown 0.6s var(--transition-smooth);
+  margin-bottom: var(--space-xl);
 }
 
 .title-group {
@@ -87,12 +88,23 @@ h1 {
   margin: 0;
 }
 
-/* 
+/*
    Form & Textarea
 */
 
 .gift-form {
   margin-bottom: var(--space-sm);
+}
+
+.input-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-primary);
+  margin-bottom: var(--space-sm);
+  opacity: 0.85;
 }
 
 .input-wrapper {
@@ -102,28 +114,30 @@ h1 {
 
 textarea {
   flex: 1;
-  background: transparent;
-  border: none;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
-  border-radius: 0;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
   min-height: calc(1.5em * 3 + 1.2rem);
   line-height: 1.5;
-  padding: 0.75rem 0;
+  padding: 0.75rem 1rem;
   color: var(--text-primary);
   font-size: 1.2rem;
   font-family: inherit;
   resize: none;
-  transition: border-color 0.3s ease;
+  transition:
+    border-color 0.3s ease,
+    background 0.3s ease;
   overflow-y: hidden;
 }
 
 textarea:focus {
   outline: none;
-  border-bottom-color: var(--accent-primary);
+  border-color: var(--accent-primary);
+  background: rgba(255, 255, 255, 0.07);
 }
 
 textarea::placeholder {
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.35);
 }
 
 /* 
@@ -268,7 +282,31 @@ textarea::placeholder {
   font-weight: 700;
 }
 
-/* 
+/*
+   Status message
+*/
+
+.status-msg {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  font-style: italic;
+  opacity: 0.8;
+}
+
+.dots span {
+  opacity: 0;
+  animation: blink 1.4s infinite;
+}
+
+.dots span:nth-child(2) { animation-delay: 0.2s; }
+.dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes blink {
+  0%, 80%, 100% { opacity: 0; }
+  40%           { opacity: 1; }
+}
+
+/*
    Utilities
 */
 

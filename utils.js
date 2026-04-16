@@ -35,7 +35,7 @@ export function setLoading(isLoading) {
     outputContainer.classList.add("visible");
     lampButton.classList.remove("loading");
     lampButton.classList.add("compact");
-    lampText.textContent = "Rub the Lamp";
+    lampText.textContent = "Ask the Genie";
   }
 }
 
