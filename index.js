@@ -42,6 +42,7 @@ async function handleGiftRequest(e) {
     }
 
     const { message } = JSON.parse(text);
+    if (!message) throw new Error("The Genie returned an empty response. Try again.");
     const html = marked.parse(message);
     outputContent.innerHTML = DOMPurify.sanitize(html, {
       ALLOWED_TAGS: ["p","h1","h2","h3","h4","h5","h6","ul","ol","li","pre","code","blockquote","a","strong","em"],

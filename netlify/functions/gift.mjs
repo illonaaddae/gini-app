@@ -38,10 +38,10 @@ export const handler = async (event) => {
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
       ],
-      max_completion_tokens: 1000,
     });
 
-    const message = completion.choices[0].message.content;
+    console.log("Completion:", JSON.stringify(completion.choices[0]));
+    const message = completion.choices[0].message.content ?? "";
     return {
       statusCode: 200,
       headers: { "Content-Type": "application/json" },
