@@ -26,21 +26,27 @@ with clarifying questions that would help improve the recommendations.`;
 
 export const handler = async (event) => {
   if (event.httpMethod !== "POST") {
-    return { statusCode: 405, body: JSON.stringify({ error: "Method not allowed" }) };
+    return { statusCode: 405, body: "Method not allowed" };
   }
 
   try {
     const { userPrompt } = JSON.parse(event.body);
 
-    const completion = await openai.chat.completions.create({
+    const stream = await openai.chat.completions.create({
       model: process.env.AI_MODEL,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
       ],
+      stream: true,
     });
 
-    const message = completion.choices[0].message.content;
+    // Collect streamed chunks into a single response
+    let message = "";
+    for await (const chunk of stream) {
+      message += chunk.choices[0]?.delta?.content ?? "";
+    }
+
     return {
       statusCode: 200,
       headers: { "Content-Type": "application/json" },
