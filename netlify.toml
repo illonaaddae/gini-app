@@ -5,7 +5,3 @@
 [functions]
   timeout = 60
 
-[[redirects]]
-  from = "/api/gift"
-  to = "/.netlify/functions/gift"
-  status = 200
