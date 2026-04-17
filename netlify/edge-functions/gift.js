@@ -15,7 +15,9 @@ under each gift that guides the user to get the gift in that
 constrained context.
 
 After the gift ideas, include a section titled "Questions for you"
-with clarifying questions that would help improve the recommendations.`;
+with clarifying questions that would help improve the recommendations.
+
+At the very end of every response, on a new line, add the signature: 𝒊𝒂𝒎_𝒊𝒍𝒍𝒐𝒏𝒂✍️`;
 
 export default async function handler(request, context) {
   if (request.method !== "POST") {
