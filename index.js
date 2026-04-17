@@ -7,9 +7,13 @@ import hljs from "highlight.js";
 const giftForm = document.getElementById("gift-form");
 const userInput = document.getElementById("user-input");
 const outputContent = document.getElementById("output-content");
+const lampBtn = document.getElementById("lamp-button");
 
 function start() {
-  userInput.addEventListener("input", () => autoResizeTextarea(userInput));
+  userInput.addEventListener("input", () => {
+    autoResizeTextarea(userInput);
+    lampBtn.classList.toggle("typing", userInput.value.trim().length > 0);
+  });
   giftForm.addEventListener("submit", handleGiftRequest);
 }
 
