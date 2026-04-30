@@ -19,12 +19,51 @@ with clarifying questions that would help improve the recommendations.
 
 At the very end of every response, on a new line, add the signature: 𝒊𝒂𝒎_𝒊𝒍𝒍𝒐𝒏𝒂✍️`;
 
+const MAX_WORDS = 100;
+const MIN_CHARS = 3;
+const MAX_CHARS = 4000; // hard cap independent of word count
+
+function countWords(text) {
+  const trimmed = text.trim();
+  return trimmed === "" ? 0 : trimmed.split(/\s+/).length;
+}
+
 export default async function handler(request, context) {
   if (request.method !== "POST") {
     return new Response("Method not allowed", { status: 405 });
   }
 
-  const { userPrompt } = await request.json();
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  const userPrompt = typeof body?.userPrompt === "string" ? body.userPrompt : "";
+  const trimmed = userPrompt.trim();
+
+  if (trimmed.length < MIN_CHARS) {
+    return new Response(
+      JSON.stringify({ error: `Prompt must be at least ${MIN_CHARS} characters.` }),
+      { status: 400, headers: { "Content-Type": "application/json" } }
+    );
+  }
+  if (trimmed.length > MAX_CHARS) {
+    return new Response(
+      JSON.stringify({ error: `Prompt exceeds ${MAX_CHARS}-character limit.` }),
+      { status: 413, headers: { "Content-Type": "application/json" } }
+    );
+  }
+  if (countWords(trimmed) > MAX_WORDS) {
+    return new Response(
+      JSON.stringify({ error: `Prompt exceeds ${MAX_WORDS}-word limit.` }),
+      { status: 413, headers: { "Content-Type": "application/json" } }
+    );
+  }
 
   const AI_KEY = Deno.env.get("AI_KEY");
   const AI_URL = Deno.env.get("AI_URL");

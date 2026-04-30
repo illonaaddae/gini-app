@@ -1,7 +1,6 @@
 import { autoResizeTextarea, setLoading, showStream, enforceWordLimit, validateInput } from "./utils.js";
-import {marked} from "marked";
+import { marked } from "marked";
 import DOMPurify from "dompurify";
-import hljs from "highlight.js";
 
 // Get UI elements
 const giftForm = document.getElementById("gift-form");
@@ -10,6 +9,12 @@ const outputContent = document.getElementById("output-content");
 const lampBtn = document.getElementById("lamp-button");
 const wordCounter = document.getElementById("word-counter");
 const inputError = document.getElementById("input-error");
+
+let activeController = null;
+
+function isLoading() {
+  return lampBtn.classList.contains("loading");
+}
 
 function refreshInputState() {
   const hasContent = userInput.value.trim().length > 0;
@@ -21,12 +26,14 @@ function showError(message) {
   inputError.textContent = message;
   inputError.classList.add("visible");
   userInput.classList.add("error");
+  userInput.setAttribute("aria-invalid", "true");
 }
 
 function clearError() {
   inputError.textContent = "";
   inputError.classList.remove("visible");
   userInput.classList.remove("error");
+  userInput.removeAttribute("aria-invalid");
 }
 
 function resetInput() {
@@ -46,11 +53,17 @@ function start() {
     if (inputError.classList.contains("visible")) clearError();
   });
 
-  // Enter submits, Shift+Enter inserts a newline
+  // Enter submits, Shift+Enter inserts a newline. Esc cancels in-flight stream.
   userInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
       e.preventDefault();
+      if (isLoading() || lampBtn.disabled) return;
       giftForm.requestSubmit();
+      return;
+    }
+    if (e.key === "Escape" && activeController) {
+      e.preventDefault();
+      activeController.abort();
     }
   });
 
@@ -59,7 +72,7 @@ function start() {
 
 async function handleGiftRequest(e) {
   e.preventDefault();
-  console.log("Form submitted");
+  if (isLoading()) return;
 
   const userPrompt = userInput.value.trim();
   const { valid, message } = validateInput(userPrompt);
@@ -70,18 +83,17 @@ async function handleGiftRequest(e) {
   }
   clearError();
 
+  activeController = new AbortController();
   setLoading(true);
   showStream();
   outputContent.innerHTML = '<span class="status-msg">Thinking<span class="dots"><span>.</span><span>.</span><span>.</span></span></span>';
 
   try {
-    console.log("Fetching /api/gift...");
     const response = await fetch("/api/gift", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userPrompt }),
+      signal: activeController.signal,
     });
 
     if (!response.ok) {
@@ -123,13 +135,17 @@ async function handleGiftRequest(e) {
     }
     resetInput();
   } catch (error) {
-    console.error(error);
-    outputContent.textContent =
-     ` Ooops Genie encountered ${error} while processing your request. Check the console.`;
+    if (error.name === "AbortError") {
+      outputContent.innerHTML += '<p class="status-msg"><em>— cancelled</em></p>';
+    } else {
+      console.error(error);
+      outputContent.textContent = ` Ooops Genie encountered ${error} while processing your request. Check the console.`;
+    }
   } finally {
+    activeController = null;
     setLoading(false);
+    refreshInputState();
   }
 }
 
 start();
-

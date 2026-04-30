@@ -29,13 +29,21 @@ export function countWords(text) {
 }
 
 /**
- * Truncate text to at most maxWords words while preserving leading/trailing
- * whitespace structure as much as possible.
+ * Truncate text to at most maxWords words, preserving original whitespace
+ * (newlines, indentation) by walking through the input rather than splitting.
  */
 export function truncateToWords(text, maxWords) {
-  const words = text.trim().split(/\s+/);
-  if (words.length <= maxWords) return text;
-  return words.slice(0, maxWords).join(" ");
+  if (countWords(text) <= maxWords) return text;
+  const wordRegex = /\S+/g;
+  let match;
+  let count = 0;
+  let endIndex = 0;
+  while ((match = wordRegex.exec(text)) !== null) {
+    count += 1;
+    endIndex = match.index + match[0].length;
+    if (count === maxWords) break;
+  }
+  return text.slice(0, endIndex);
 }
 
 export function enforceWordLimit(textarea, counterEl, maxWords = MAX_WORDS) {
@@ -82,35 +90,6 @@ export function setLoading(isLoading) {
     lampButton.classList.add("compact");
     lampText.textContent = "Ask the Genie";
   }
-}
-
-export function checkEnvironment() {
-  const aiUrl = process.env.AI_URL || import.meta.env.VITE_AI_URL;
-  const aiModel = process.env.AI_MODEL || import.meta.env.VITE_AI_MODEL;
-  const aiKey = process.env.AI_KEY || import.meta.env.VITE_AI_KEY;
-
-  if (!aiUrl) {
-    throw new Error(
-      "Missing AI_URL. This tells us which AI provider you're using.",
-    );
-  }
-
-  if (!aiModel) {
-    throw new Error("Missing AI_MODEL. The AI request needs a model name.");
-  }
-
-  if (!aiKey) {
-    throw new Error("Missing AI_KEY. Your API key is not being picked up.");
-  }
-
-  if (aiUrl.includes("openrouter.ai") && !aiKey.startsWith("sk-or-v1-")) {
-    throw new Error(
-      "OpenRouter URL detected, but the key does not look like an OpenRouter key (expected prefix: sk-or-v1-).",
-    );
-  }
-
-  console.log("AI provider URL:", aiUrl);
-  console.log("AI model:", aiModel);
 }
 
 /**
