@@ -25,7 +25,14 @@
               <textarea
                 id="user-input"
                 placeholder="e.g., My friend who loves hiphop music has a birthday coming up in 3 days. 40-60 bucks budget. I live in..."
+                required
+                minlength="3"
+                aria-describedby="input-error word-counter"
               ></textarea>
+            </div>
+            <div class="input-meta">
+              <p id="input-error" class="input-error" role="alert" aria-live="polite"></p>
+              <div id="word-counter" class="word-counter">0 / 100 words</div>
             </div>
           </div>
 

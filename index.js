@@ -1,4 +1,4 @@
-import { autoResizeTextarea, setLoading, showStream } from "./utils.js";
+import { autoResizeTextarea, setLoading, showStream, enforceWordLimit, validateInput } from "./utils.js";
 import {marked} from "marked";
 import DOMPurify from "dompurify";
 import hljs from "highlight.js";
@@ -8,12 +8,45 @@ const giftForm = document.getElementById("gift-form");
 const userInput = document.getElementById("user-input");
 const outputContent = document.getElementById("output-content");
 const lampBtn = document.getElementById("lamp-button");
+const wordCounter = document.getElementById("word-counter");
+const inputError = document.getElementById("input-error");
+
+function refreshInputState() {
+  const hasContent = userInput.value.trim().length > 0;
+  lampBtn.classList.toggle("typing", hasContent);
+  lampBtn.disabled = !hasContent;
+}
+
+function showError(message) {
+  inputError.textContent = message;
+  inputError.classList.add("visible");
+  userInput.classList.add("error");
+}
+
+function clearError() {
+  inputError.textContent = "";
+  inputError.classList.remove("visible");
+  userInput.classList.remove("error");
+}
 
 function start() {
+  refreshInputState();
+
   userInput.addEventListener("input", () => {
+    enforceWordLimit(userInput, wordCounter);
     autoResizeTextarea(userInput);
-    lampBtn.classList.toggle("typing", userInput.value.trim().length > 0);
+    refreshInputState();
+    if (inputError.classList.contains("visible")) clearError();
   });
+
+  // Enter submits, Shift+Enter inserts a newline
+  userInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
+      e.preventDefault();
+      giftForm.requestSubmit();
+    }
+  });
+
   giftForm.addEventListener("submit", handleGiftRequest);
 }
 
@@ -22,7 +55,13 @@ async function handleGiftRequest(e) {
   console.log("Form submitted");
 
   const userPrompt = userInput.value.trim();
-  if (!userPrompt) return;
+  const { valid, message } = validateInput(userPrompt);
+  if (!valid) {
+    showError(message);
+    userInput.focus();
+    return;
+  }
+  clearError();
 
   setLoading(true);
   showStream();
