@@ -29,6 +29,13 @@ function clearError() {
   userInput.classList.remove("error");
 }
 
+function resetInput() {
+  userInput.value = "";
+  autoResizeTextarea(userInput);
+  enforceWordLimit(userInput, wordCounter);
+  refreshInputState();
+}
+
 function start() {
   refreshInputState();
 
@@ -114,6 +121,7 @@ async function handleGiftRequest(e) {
         }
       }
     }
+    resetInput();
   } catch (error) {
     console.error(error);
     outputContent.textContent =
